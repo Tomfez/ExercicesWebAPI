@@ -1,5 +1,6 @@
 
 using JobOverview.Data;
+using JobOverview.Service;
 using Microsoft.EntityFrameworkCore;
 
 namespace JobOverview
@@ -20,6 +21,7 @@ namespace JobOverview
             string? connect = builder.Configuration.GetConnectionString("JobOverviewConnect");
             builder.Services.AddDbContext<ContexteJobOverview>(opt => opt.UseSqlServer(connect));
 
+            builder.Services.AddScoped<IServiceLogiciels, ServiceLogiciels>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

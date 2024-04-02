@@ -8,5 +8,6 @@
         public DateOnly DateOuverture { get; set; }
         public DateOnly DateSortiePrevue { get; set; }
         public DateOnly? DateSortieReelle { get; set; }
+        public virtual List<Release> Releases { get; set; } = new();
     }
 }

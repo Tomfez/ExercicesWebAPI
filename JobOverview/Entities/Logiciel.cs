@@ -5,5 +5,6 @@
         public string Code { get; set; } = string.Empty;
         public string Nom { get; set; } = string.Empty;
         public string CodeFiliere { get; set; } = string.Empty;
+        public virtual List<Module> Modules { get; set; } = new();
     }
 }

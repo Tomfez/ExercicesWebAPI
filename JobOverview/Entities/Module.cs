@@ -7,5 +7,6 @@
         public string Nom { get; set; } = string.Empty;
         public string? CodeModuleParent { get; set; }
         public string? CodeLogicielParent { get; set; }
+        public virtual List<Module> SousModules { get; set; } = new();
     }
 }
