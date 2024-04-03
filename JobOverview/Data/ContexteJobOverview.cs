@@ -1,6 +1,7 @@
 ﻿using JobOverview.Entities;
 using Microsoft.EntityFrameworkCore;
 using Version = JobOverview.Entities.Version;
+using Service = JobOverview.Entities.Service;
 
 namespace JobOverview.Data
 {
@@ -11,15 +12,21 @@ namespace JobOverview.Data
         {
         }
 
+        #region props
         public virtual DbSet<Filiere> Filieres { get; set; }
         public virtual DbSet<Logiciel> Logiciels { get; set; }
         public virtual DbSet<Module> Modules { get; set; }
         public virtual DbSet<Release> Releases { get; set; }
         public virtual DbSet<Version> Versions { get; set; }
-
+        public virtual DbSet<Equipe> Equipes { get; set; }
+        public virtual DbSet<Entities.Service> Services { get; set; }
+        public virtual DbSet<Metier> Metiers { get; set; }
+        public virtual DbSet<Personne> Personnes { get; set; }
+        #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            #region Logiciels
             modelBuilder.Entity<Filiere>(entity =>
             {
                 entity.HasKey(e => e.Code);
@@ -53,8 +60,7 @@ namespace JobOverview.Data
             modelBuilder.Entity<Release>(entity =>
             {
                 entity.HasKey(e => new { e.Numero, e.NumeroVersion, e.CodeLogiciel });
-                //entity.HasOne<Version>().WithMany().HasForeignKey(r => new { r.NumeroVersion, r.CodeLogiciel});
-                entity.HasOne<Version>().WithMany(v => v.Releases).HasForeignKey(r => new { r.NumeroVersion, r.CodeLogiciel});
+                entity.HasOne<Version>().WithMany(v => v.Releases).HasForeignKey(r => new { r.NumeroVersion, r.CodeLogiciel });
 
                 entity.Property(e => e.CodeLogiciel).HasMaxLength(20).IsUnicode(false);
             });
@@ -62,11 +68,59 @@ namespace JobOverview.Data
             modelBuilder.Entity<Version>(entity =>
             {
                 entity.HasKey(e => new { e.Numero, e.CodeLogiciel });
-                //entity.HasOne<Logiciel>().WithMany().HasForeignKey(v => v.CodeLogiciel).OnDelete(DeleteBehavior.NoAction);
                 entity.HasOne<Logiciel>().WithMany().HasForeignKey(v => v.CodeLogiciel).OnDelete(DeleteBehavior.NoAction);
 
                 entity.Property(e => e.CodeLogiciel).HasMaxLength(20).IsUnicode(false);
             });
+            #endregion
+
+            #region Equipes
+            modelBuilder.Entity<Equipe>(entity =>
+            {
+                entity.HasKey(e => e.Code);
+                entity.HasOne(e => e.Service).WithMany().HasForeignKey(s => s.CodeService).OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne<Filiere>().WithMany().HasForeignKey(f => f.CodeFiliere).OnDelete(DeleteBehavior.NoAction);
+
+                entity.Property(e => e.Code).HasMaxLength(20).IsUnicode(false);
+                entity.Property(e => e.Nom).HasMaxLength(60).IsUnicode(false);
+                entity.Property(e => e.CodeService).HasMaxLength(20).IsUnicode(false);
+                entity.Property(e => e.CodeFiliere).HasMaxLength(20).IsUnicode(false);
+            });
+
+            modelBuilder.Entity<Entities.Service>(entity =>
+            {
+                entity.HasKey(e => e.Code);
+
+                entity.Property(e => e.Code).HasMaxLength(20).IsUnicode(false);
+                entity.Property(e => e.Nom).HasMaxLength(60);
+            });
+
+            modelBuilder.Entity<Metier>(entity =>
+            {
+                entity.HasKey(e => e.Code);
+                entity.HasOne<Entities.Service>().WithMany().HasForeignKey(m => m.CodeService).OnDelete(DeleteBehavior.NoAction);
+
+                entity.Property(e => e.Code).HasMaxLength(20).IsUnicode(false);
+                entity.Property(e => e.Titre).HasMaxLength(60);
+                entity.Property(e => e.CodeService).HasMaxLength(20).IsUnicode(false);
+            });
+
+            modelBuilder.Entity<Personne>(entity =>
+            {
+                entity.HasKey(e => e.Pseudo);
+                entity.HasOne<Equipe>().WithMany(e => e.Personnes).HasForeignKey(p => p.CodeEquipe).OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne<Personne>().WithMany().HasForeignKey(p => p.Manager).OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne(p => p.Metier).WithMany().HasForeignKey(p => p.CodeMetier).OnDelete(DeleteBehavior.NoAction);
+
+                entity.Property(e => e.Pseudo).HasMaxLength(20).IsUnicode(false);
+                entity.Property(e => e.Nom).HasMaxLength(60);
+                entity.Property(e => e.Prenom).HasMaxLength(60);
+                entity.Property(e => e.TauxProductivite).HasColumnType("decimal(3,2)").HasDefaultValue(1);
+                entity.Property(e => e.CodeEquipe).HasMaxLength(20).IsUnicode(false);
+                entity.Property(e => e.CodeMetier).HasMaxLength(20).IsUnicode(false);
+                entity.Property(e => e.Manager).HasMaxLength(20).IsUnicode(false);
+            });
+            #endregion
         }
     }
 }

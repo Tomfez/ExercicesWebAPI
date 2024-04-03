@@ -22,6 +22,7 @@ namespace JobOverview
             builder.Services.AddDbContext<ContexteJobOverview>(opt => opt.UseSqlServer(connect));
 
             builder.Services.AddScoped<IServiceLogiciels, ServiceLogiciels>();
+            builder.Services.AddScoped<IServiceEquipes, ServiceEquipes>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
