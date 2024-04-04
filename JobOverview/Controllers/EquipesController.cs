@@ -11,6 +11,7 @@ using JobOverview.Service;
 
 namespace JobOverview.Controllers
 {
+    // api/Filieres/BIOV/Equipes
     [Route("api/Filieres/{codeFiliere}/[controller]")]
     [ApiController]
     public class EquipesController : ControllerBase
@@ -43,6 +44,29 @@ namespace JobOverview.Controllers
             return Ok(equipe);
         }
 
+        // POST: api/Filieres/BIOH/Equipes
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPost]
+        public async Task<ActionResult<Equipe>> PostEquipe(string codeFiliere, Equipe equipe)
+        {
+            Equipe res = await _service.PostEquipe(codeFiliere, equipe);
+
+            return CreatedAtAction("GetEquipe", new { codeFiliere = res.CodeFiliere, nomEquipe = res.Nom }, res);
+        }
+
+        // api/Filieres/BIOV/Equipes/BIOV_MKT
+        [HttpPost("{nomEquipe}")]
+        public async Task<ActionResult<Personne>> PostPersonne(string codeFiliere, string nomEquipe, Personne personne)
+        {
+            Personne res = await _service.PostPersonne(nomEquipe, personne);
+            object key = new { codeFiliere, nomEquipe };
+            //string uri = Url.Action(nameof(GetEquipe), key) ?? "";
+
+            return CreatedAtAction(nameof(GetEquipe), key, res);
+            //return Created(uri, res);
+        }
+
+
         // PUT: api/Equipes/5
         //// To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         //[HttpPut("{id}")]
@@ -74,30 +98,7 @@ namespace JobOverview.Controllers
         //    return NoContent();
         //}
 
-        //// POST: api/Equipes
-        //// To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        //[HttpPost]
-        //public async Task<ActionResult<Equipe>> PostEquipe(Equipe equipe)
-        //{
-        //    _context.Equipes.Add(equipe);
-        //    try
-        //    {
-        //        await _context.SaveChangesAsync();
-        //    }
-        //    catch (DbUpdateException)
-        //    {
-        //        if (EquipeExists(equipe.Code))
-        //        {
-        //            return Conflict();
-        //        }
-        //        else
-        //        {
-        //            throw;
-        //        }
-        //    }
 
-        //    return CreatedAtAction("GetEquipe", new { id = equipe.Code }, equipe);
-        //}
 
         //// DELETE: api/Equipes/5
         //[HttpDelete("{id}")]

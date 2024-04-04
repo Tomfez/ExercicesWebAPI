@@ -9,6 +9,6 @@
         public string CodeEquipe { get; set; } = string.Empty;
         public string CodeMetier { get; set; } = string.Empty;
         public string? Manager { get; set; }
-        public virtual Metier Metier { get; set; } = null!;
+        public virtual Metier? Metier { get; set; }
     }
 }

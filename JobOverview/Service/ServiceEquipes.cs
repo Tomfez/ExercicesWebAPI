@@ -8,6 +8,8 @@ namespace JobOverview.Service
     {
         public Task<List<Equipe>?> GetEquipes(string codeFiliere);
         public Task<Equipe?> GetEquipe(string codeFiliere, string nomEquipe);
+        public Task<Equipe> PostEquipe(string codeFiliere, Equipe equipe);
+        public Task<Personne> PostPersonne(string nomEquipe, Personne personne);
     }
 
     public class ServiceEquipes : IServiceEquipes
@@ -15,7 +17,7 @@ namespace JobOverview.Service
         private readonly ContexteJobOverview _context;
         public ServiceEquipes(ContexteJobOverview context)
         {
-                _context = context;
+            _context = context;
         }
 
         public async Task<List<Equipe>?> GetEquipes(string codeFiliere)
@@ -41,6 +43,30 @@ namespace JobOverview.Service
                        select e;
 
             return await req2.FirstOrDefaultAsync();
+        }
+
+        public async Task<Equipe> PostEquipe(string codeFiliere, Equipe equipe)
+        {
+            equipe.Service = null;
+            equipe.CodeFiliere = codeFiliere;
+
+            foreach (Personne personne in equipe.Personnes)
+            {
+                personne.Metier = null;
+            }
+
+            _context.Equipes.Add(equipe);
+            await _context.SaveChangesAsync();
+            return equipe;
+        }
+
+        public async Task<Personne> PostPersonne(string nomEquipe, Personne personne)
+        {
+            personne.CodeEquipe = nomEquipe;
+
+            _context.Personnes.Add(personne);
+            await _context.SaveChangesAsync();
+            return personne;
         }
     }
 }

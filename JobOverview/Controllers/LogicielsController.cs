@@ -73,12 +73,28 @@ namespace JobOverview.Controllers
 
         // POST: api/Logiciels
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost("{codeLogiciel}/Versions/{numVersion}/Releases/{numRelease}")]
+        [HttpPost("{codeLogiciel}/Versions/{numVersion}/Releases")]
         public async Task<ActionResult<Logiciel>> PostRelease(string codeLogiciel, float numVersion, [FromForm] FormRelease formRel)
         {
-            var res = await _service.PostRelease(codeLogiciel numRelease);
+            Release release = new Release()
+            {
+                Numero = formRel.Numero,
+                NumeroVersion = numVersion,
+                CodeLogiciel = codeLogiciel,
+                DatePubli = formRel.DatePubli
+            };
 
-            return CreatedAtAction("GetLogiciel", new { id = res.Id }, res);
+            if (formRel.Notes != null)
+            {
+                using StreamReader reader = new(formRel.Notes.OpenReadStream());
+                release.Notes = await reader.ReadToEndAsync();
+            }
+
+            Release res = await _service.PostRelease(codeLogiciel, numVersion, release);
+
+            object key = new { codeLogiciel = res.CodeLogiciel, numVersion = res.NumeroVersion, numRelease = res.Numero };
+            string uri = Url.Action(nameof(PostRelease), key) ?? "";
+            return Created(uri, res);
         }
 
         //// PUT: api/Logiciels/5

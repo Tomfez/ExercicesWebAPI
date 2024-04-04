@@ -12,7 +12,7 @@ namespace JobOverview.Service
         Task<Logiciel?> GetLogiciel(string code);
         Task<List<Version>?> GetVersionsLogiciel(string code, short? millesime);
         Task<Release?> GetRelease(string codeLogiciel, float numVersion, short numRelease);
-        Task<Release> PostRelease(Release release);
+        Task<Release> PostRelease(string codeLogiciel, float numVersion, Release release);
     }
 
     public class ServiceLogiciels : IServiceLogiciels
@@ -81,7 +81,7 @@ namespace JobOverview.Service
             return await _context.Releases.FindAsync(numRelease, numVersion, codeLogiciel);
         }
 
-        public async Task<Release> PostRelease(Release release)
+        public async Task<Release> PostRelease(string codeLogiciel, float numVersion, Release release)
         {
             _context.Releases.Add(release);
             await _context.SaveChangesAsync();
