@@ -4,6 +4,7 @@ using JobOverview.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace JobOverview.Data.Migrations
 {
     [DbContext(typeof(ContexteJobOverview))]
-    partial class ContexteJobOverviewModelSnapshot : ModelSnapshot
+    [Migration("20240403132204_Ajout_Col_Notes")]
+    partial class Ajout_Col_Notes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

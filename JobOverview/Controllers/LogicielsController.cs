@@ -59,6 +59,28 @@ namespace JobOverview.Controllers
             return Ok(versions);
         }
 
+        // GET: api/Logiciels/GENOMICA/Versions/1.00/Releases/30
+        [HttpGet("{codeLogiciel}/Versions/{numVersion}/Releases/{numRelease}")]
+        public async Task<ActionResult<Release?>> GetRelease(string codeLogiciel, float numVersion, short numRelease)
+        {
+            var release = await _service.GetRelease(codeLogiciel, numVersion, numRelease);
+
+            if (release == null)
+                return NotFound();
+
+            return Ok(release);
+        }
+
+        // POST: api/Logiciels
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPost("{codeLogiciel}/Versions/{numVersion}/Releases/{numRelease}")]
+        public async Task<ActionResult<Logiciel>> PostRelease(string codeLogiciel, float numVersion, [FromForm] FormRelease formRel)
+        {
+            var res = await _service.PostRelease(codeLogiciel numRelease);
+
+            return CreatedAtAction("GetLogiciel", new { id = res.Id }, res);
+        }
+
         //// PUT: api/Logiciels/5
         //// To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         //[HttpPut("{id}")]

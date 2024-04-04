@@ -68,7 +68,7 @@ namespace JobOverview.Data
             modelBuilder.Entity<Version>(entity =>
             {
                 entity.HasKey(e => new { e.Numero, e.CodeLogiciel });
-                entity.HasOne<Logiciel>().WithMany().HasForeignKey(v => v.CodeLogiciel).OnDelete(DeleteBehavior.NoAction);
+                entity.HasOne<Logiciel>().WithMany(l => l.Versions).HasForeignKey(v => v.CodeLogiciel).OnDelete(DeleteBehavior.NoAction);
 
                 entity.Property(e => e.CodeLogiciel).HasMaxLength(20).IsUnicode(false);
             });
