@@ -9,6 +9,7 @@ using JobOverview.Data;
 using JobOverview.Entities;
 using JobOverview.Service;
 using Version = JobOverview.Entities.Version;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace JobOverview.Controllers
 {
@@ -17,12 +18,15 @@ namespace JobOverview.Controllers
     public class LogicielsController : ControllerBase
     {
         private readonly IServiceLogiciels _service;
+        private readonly ILogger<LogicielsController> _logger;
 
-        public LogicielsController(IServiceLogiciels service)
+        public LogicielsController(IServiceLogiciels service, ILogger<LogicielsController> logger)
         {
             _service = service;
+            _logger = logger;
         }
 
+        #region GET
         // GET: api/Logiciels
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Logiciel>>> GetLogiciels([FromQuery] string? codeFiliere)
@@ -70,7 +74,9 @@ namespace JobOverview.Controllers
 
             return Ok(release);
         }
+        #endregion
 
+        #region POST
         // POST: api/Logiciels
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost("{codeLogiciel}/Versions/{numVersion}/Releases")]
@@ -90,12 +96,37 @@ namespace JobOverview.Controllers
                 release.Notes = await reader.ReadToEndAsync();
             }
 
-            Release res = await _service.PostRelease(codeLogiciel, numVersion, release);
+            try
+            {
+                Release res = await _service.PostRelease(codeLogiciel, numVersion, release);
 
-            object key = new { codeLogiciel = res.CodeLogiciel, numVersion = res.NumeroVersion, numRelease = res.Numero };
-            string uri = Url.Action(nameof(PostRelease), key) ?? "";
-            return Created(uri, res);
+                object key = new { codeLogiciel = res.CodeLogiciel, numVersion = res.NumeroVersion, numRelease = res.Numero };
+                string uri = Url.Action(nameof(PostRelease), key) ?? "";
+                return Created(uri, res);
+            }
+            catch (Exception ex)
+            {
+
+                return this.CustomResponseForError(ex, formRel, _logger);
+            }
         }
+
+        // POST:api/Logiciels/GENOMICA/versions
+        [HttpPost("{codeLogiciel}/versions/")]
+        public async Task<ActionResult<Version>> PostVersion(string codeLogiciel, Version version)
+        {
+            try
+            {
+            Version res = await _service.PostVersion(codeLogiciel, version);
+            return CreatedAtAction(nameof(GetVersions), new {codeLogiciel}, res);
+            }
+            catch (Exception ex )
+            {
+                return this.CustomResponseForError(ex, version, _logger);
+            }
+        }
+
+        #endregion
 
         //// PUT: api/Logiciels/5
         //// To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754

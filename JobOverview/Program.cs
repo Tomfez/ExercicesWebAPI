@@ -19,10 +19,13 @@ namespace JobOverview
             builder.Services.AddSwaggerGen();
 
             string? connect = builder.Configuration.GetConnectionString("JobOverviewConnect");
-            builder.Services.AddDbContext<ContexteJobOverview>(opt => opt.UseSqlServer(connect));
+            builder.Services.AddDbContext<ContexteJobOverview>(opt => opt
+                .UseSqlServer(connect)
+                .EnableSensitiveDataLogging());
 
             builder.Services.AddScoped<IServiceLogiciels, ServiceLogiciels>();
             builder.Services.AddScoped<IServiceEquipes, ServiceEquipes>();
+            builder.Services.AddScoped<IServiceTaches, ServiceTaches>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

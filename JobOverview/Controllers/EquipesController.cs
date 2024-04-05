@@ -17,12 +17,15 @@ namespace JobOverview.Controllers
     public class EquipesController : ControllerBase
     {
         private readonly IServiceEquipes _service;
+        private readonly ILogger<EquipesController> _logger;
 
-        public EquipesController(IServiceEquipes service)
+        public EquipesController(IServiceEquipes service, ILogger<EquipesController> logger)
         {
             _service = service;
+            _logger = logger;
         }
 
+        #region GET
         // GET: api/Filieres/BIOH/Equipes
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Equipe>?>> GetEquipes(string codeFiliere)
@@ -43,29 +46,43 @@ namespace JobOverview.Controllers
 
             return Ok(equipe);
         }
+        #endregion
 
+        #region POST
         // POST: api/Filieres/BIOH/Equipes
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Equipe>> PostEquipe(string codeFiliere, Equipe equipe)
         {
-            Equipe res = await _service.PostEquipe(codeFiliere, equipe);
+            try
+            {
+                Equipe res = await _service.PostEquipe(codeFiliere, equipe);
 
-            return CreatedAtAction("GetEquipe", new { codeFiliere = res.CodeFiliere, nomEquipe = res.Nom }, res);
+                return CreatedAtAction("GetEquipe", new { codeFiliere = res.CodeFiliere, nomEquipe = res.Nom }, res);
+            }
+            catch (Exception ex)
+            {
+                return this.CustomResponseForError(ex, equipe, _logger);
+            }
         }
 
-        // api/Filieres/BIOV/Equipes/BIOV_MKT
+        // POST: api/Filieres/BIOV/Equipes/BIOV_MKT
         [HttpPost("{nomEquipe}")]
         public async Task<ActionResult<Personne>> PostPersonne(string codeFiliere, string nomEquipe, Personne personne)
         {
-            Personne res = await _service.PostPersonne(nomEquipe, personne);
-            object key = new { codeFiliere, nomEquipe };
-            //string uri = Url.Action(nameof(GetEquipe), key) ?? "";
+            try
+            {
+                Personne res = await _service.PostPersonne(nomEquipe, personne);
+                object key = new { codeFiliere, nomEquipe };
 
-            return CreatedAtAction(nameof(GetEquipe), key, res);
-            //return Created(uri, res);
+                return CreatedAtAction(nameof(GetEquipe), key, res);
+            }
+            catch (Exception ex)
+            {
+                return this.CustomResponseForError(ex, personne, _logger);
+            }
         }
-
+        #endregion
 
         // PUT: api/Equipes/5
         //// To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
