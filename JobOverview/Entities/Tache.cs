@@ -5,7 +5,7 @@
         public int Id { get; set; }
         public string Titre { get; set; } = string.Empty;
         public float DureePrevue { get; set; }
-        public float DureeRestante { get; set; }
+        public decimal DureeRestante { get; set; }
         public string CodeActivite { get; set; } = string.Empty;
         public string Personne { get; set; } = string.Empty;
         public string CodeLogiciel { get; set; } = string.Empty;
