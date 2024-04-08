@@ -1,5 +1,6 @@
 ﻿using JobOverview.Data;
 using JobOverview.Entities;
+using JobOverview.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
 namespace JobOverview.Service
@@ -10,6 +11,7 @@ namespace JobOverview.Service
         public Task<Equipe?> GetEquipe(string codeFiliere, string nomEquipe);
         public Task<Equipe> PostEquipe(string codeFiliere, Equipe equipe);
         public Task<Personne> PostPersonne(string nomEquipe, Personne personne);
+        public Task<int> PutPersonne(string codeEquipe, string pseudo);
     }
 
     public class ServiceEquipes : IServiceEquipes
@@ -20,6 +22,7 @@ namespace JobOverview.Service
             _context = context;
         }
 
+        #region GET
         public async Task<List<Equipe>?> GetEquipes(string codeFiliere)
         {
             if (await _context.Filieres.FindAsync(codeFiliere) == null)
@@ -44,7 +47,9 @@ namespace JobOverview.Service
 
             return await req2.FirstOrDefaultAsync();
         }
+        #endregion
 
+        #region POST
         public async Task<Equipe> PostEquipe(string codeFiliere, Equipe equipe)
         {
             equipe.Service = null;
@@ -68,5 +73,27 @@ namespace JobOverview.Service
             await _context.SaveChangesAsync();
             return personne;
         }
+        #endregion
+
+        #region PUT
+        public async Task<int> PutPersonne(string codeEquipe, string pseudo)
+        {
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                // Modifie le manager de toute l'équipe
+                int nbModifs = await _context.Personnes
+                    .Where(p => p.CodeEquipe == codeEquipe)
+                    .ExecuteUpdateAsync(setter => setter.SetProperty(p => p.Manager, pseudo));
+
+                // Remet à null le champ manager pour lui-même
+                await _context.Personnes
+                    .Where(p => p.Pseudo == pseudo)
+                    .ExecuteUpdateAsync(setter => setter.SetProperty(p => p.Manager, (string?)null));
+
+                transaction.Commit();
+                return nbModifs;
+            }
+        }
+        #endregion
     }
 }

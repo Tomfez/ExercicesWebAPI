@@ -72,19 +72,19 @@ namespace JobOverview.Controllers
         #region POST
         // POST: api/Taches
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<Tache>> PostTache(Tache tache)
-        {
-            try
-            {
-                await _service.PostTache(tache);
-                return CreatedAtAction(nameof(GetTache), new { id = tache.Id }, tache);
-            }
-            catch (Exception ex)
-            {
-                return this.CustomResponseForError(ex);
-            }
-        }
+        //[HttpPost]
+        //public async Task<ActionResult<Tache>> PostTache(Tache tache)
+        //{
+        //    try
+        //    {
+        //        await _service.PostTache(tache);
+        //        return CreatedAtAction(nameof(GetTache), new { id = tache.Id }, tache);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return this.CustomResponseForError(ex);
+        //    }
+        //}
 
         // POST: api/Taches/44/Travaux
         [HttpPost("{idTache}/Travaux")]
@@ -170,5 +170,25 @@ namespace JobOverview.Controllers
 
         //    return NoContent();
         //}
+
+        // PUT: api/Taches/5
+        [HttpPut]
+        public async Task<ActionResult<Tache>> PutTache(Tache tache)
+        {
+            try
+            {
+                Tache result = await _service.PutPostTache(tache);
+
+                // Si elle est ajoutée, EF renvoie 0
+                if(result.Id == 0)
+                    return CreatedAtAction(nameof(GetTache), new { result.Id }, result);
+                else
+                    return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return this.CustomResponseForError(ex);
+            }
+        }
     }
 }

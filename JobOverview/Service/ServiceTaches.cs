@@ -17,6 +17,7 @@ namespace JobOverview.Service
         public Task<Travail> PostTravail(int idTache, Travail travail);
         public Task DeleteTravail(int idTache, DateOnly date);
         public Task<int> DeleteTaches(string? personne, string? logiciel, float? version);
+        public Task<Tache> PutPostTache(Tache tache);
     }
 
     public class ServiceTaches : IServiceTaches
@@ -187,5 +188,15 @@ namespace JobOverview.Service
             //}
         }
         #endregion
+
+        public async Task<Tache> PutPostTache(Tache tache)
+        {
+            tache.Travaux = null!;
+
+            _context.Taches.Update(tache);
+            await _context.SaveChangesAsync();
+
+            return tache;
+        }
     }
 }

@@ -84,36 +84,46 @@ namespace JobOverview.Controllers
         }
         #endregion
 
-        // PUT: api/Equipes/5
-        //// To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        //[HttpPut("{id}")]
-        //public async Task<IActionResult> PutEquipe(string id, Equipe equipe)
-        //{
-        //    if (id != equipe.Code)
-        //    {
-        //        return BadRequest();
-        //    }
 
-        //    _context.Entry(equipe).State = EntityState.Modified;
+        // PUT: api/Equipes?manager=x
+        [HttpPut("{codeEquipe}")]
+        public async Task<IActionResult> PutEquipe(string codeEquipe, [FromQuery] string manager)
+        {
+            try
+            {
+                int res = await _service.PutPersonne(codeEquipe, manager);
 
-        //    try
-        //    {
-        //        await _context.SaveChangesAsync();
-        //    }
-        //    catch (DbUpdateConcurrencyException)
-        //    {
-        //        if (!EquipeExists(id))
-        //        {
-        //            return NotFound();
-        //        }
-        //        else
-        //        {
-        //            throw;
-        //        }
-        //    }
+                return Ok(res + " personnes modifiées");
+            }
+            catch (Exception ex)
+            {
+                return this.CustomResponseForError(ex);
+            }
+            //    if (id != equipe.Code)
+            //    {
+            //        return BadRequest();
+            //    }
 
-        //    return NoContent();
-        //}
+            //    _context.Entry(equipe).State = EntityState.Modified;
+
+            //    try
+            //    {
+            //        await _context.SaveChangesAsync();
+            //    }
+            //    catch (DbUpdateConcurrencyException)
+            //    {
+            //        if (!EquipeExists(id))
+            //        {
+            //            return NotFound();
+            //        }
+            //        else
+            //        {
+            //            throw;
+            //        }
+            //    }
+
+            //    return NoContent();
+        }
 
 
 
