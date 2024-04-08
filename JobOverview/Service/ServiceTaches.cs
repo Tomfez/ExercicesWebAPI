@@ -15,6 +15,8 @@ namespace JobOverview.Service
         public Task<Personne?> GetPersonne(string pseudo);
         public Task<Tache> PostTache(Tache tache);
         public Task<Travail> PostTravail(int idTache, Travail travail);
+        public Task DeleteTravail(int idTache, DateOnly date);
+        public Task<int> DeleteTaches(string? personne, string? logiciel, float? version);
     }
 
     public class ServiceTaches : IServiceTaches
@@ -99,16 +101,16 @@ namespace JobOverview.Service
         public async Task<Travail> PostTravail(int idTache, Travail travail)
         {
             ValidationRulesException vre = new();
-            
+
             if (travail.Heures < 0.5m || travail.Heures > 8)
                 vre.Errors.Add("Heures", new string[] { "Le nombre d'heures doit être compris entre 0.5 et 8" });
 
-            if (vre.Errors.Any()) 
+            if (vre.Errors.Any())
                 throw vre;
 
             // Récupère la tâche
             Tache? tache = await _context.Taches.FindAsync(idTache);
-    
+
             if (tache == null)
                 throw new ValidationRulesException("IdTache", $"Tache {idTache} non trouvée");
 
@@ -125,6 +127,64 @@ namespace JobOverview.Service
             _context.Travaux.Add(travail);
             await _context.SaveChangesAsync();
             return travail;
+        }
+        #endregion
+
+        #region DELETE
+        public async Task DeleteTravail(int idTache, DateOnly date)
+        {
+            Tache? tache = await GetTache(idTache);
+
+            if (tache == null)
+                throw new ValidationRulesException("IdTache", $"Tache {idTache} non trouvée");
+
+            Travail? travail = tache.Travaux.Where(t => t.DateTravail == date).FirstOrDefault();
+
+            if (travail == null)
+                throw new ValidationRulesException("Date", "Aucun travail trouvé à la date donnée");
+
+            tache.DureeRestante += travail.Heures;
+
+            _context.Remove(travail);
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<int> DeleteTaches(string? personne, string? logiciel, float? version)
+        {
+            var req = _context.Taches.Where(t =>
+                        (personne == null || t.Personne == personne) &&
+                        (logiciel == null || t.CodeLogiciel == logiciel) &&
+                        (version == null || t.NumVersion == version));
+
+            return await req.ExecuteDeleteAsync();
+
+            //List<Tache> taches = await GetTaches(personne, logiciel, version);
+
+            //if (!taches.Any())
+            //    throw new ValidationRulesException("Personne", "Aucune info trouvée");
+
+            //using (var transaction = _context.Database.BeginTransaction())
+            //{
+            //    int nbSuppr = 0;
+
+            //    foreach (var tache in taches)
+            //    {
+            //        _context.Entry(tache).State = EntityState.Deleted;
+
+            //        //await _context.Taches.Where(x => x.Id == tache.Id).ExecuteDeleteAsync();
+
+            //        // On supprime le travail
+            //        Travail travail = new() { IdTache = tache.Id };
+            //        nbSuppr++;
+            //    }
+
+            //    await _context.SaveChangesAsync();
+
+            //    transaction.Commit();
+
+            //    return nbSuppr;
+            //}
         }
         #endregion
     }

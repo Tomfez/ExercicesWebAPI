@@ -21,6 +21,7 @@ namespace JobOverview
             string? connect = builder.Configuration.GetConnectionString("JobOverviewConnect");
             builder.Services.AddDbContext<ContexteJobOverview>(opt => opt
                 .UseSqlServer(connect)
+                //.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
                 .EnableSensitiveDataLogging());
 
             builder.Services.AddScoped<IServiceLogiciels, ServiceLogiciels>();

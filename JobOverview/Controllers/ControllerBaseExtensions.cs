@@ -2,6 +2,7 @@
 using JobOverview.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 
@@ -12,7 +13,12 @@ namespace JobOverview.Controllers
         // Renvoie une réponse HTTP personnalisée pour les erreurs
         public static ActionResult CustomResponseForError(this ControllerBase controller, Exception e)
         {
-            if (e is DbUpdateException dbe)
+            if(e is DbUpdateConcurrencyException)
+            {
+                return controller.Problem("L'entité ou au moins l'une de ses entités filles n'existe pas en base.",
+                    null, (int)HttpStatusCode.NotFound, "Aucune modification enregistrée en base.");
+            }
+            else if (e is DbUpdateException dbe)
             {
                 ProblemDetails pb = dbe.ConvertToProblemDetails();
                 return controller.Problem(pb.Detail, null, pb.Status, pb.Title);

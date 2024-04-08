@@ -22,6 +22,7 @@ namespace JobOverview.Controllers
             _service = service;
         }
 
+        #region GET
         // GET: api/Taches?personne=x&logiciel=y&version=z
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Tache>>> GetTaches(
@@ -66,7 +67,9 @@ namespace JobOverview.Controllers
 
             return Ok(personne);
         }
+        #endregion
 
+        #region POST
         // POST: api/Taches
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
@@ -97,6 +100,45 @@ namespace JobOverview.Controllers
                 return this.CustomResponseForError(ex);
             }
         }
+        #endregion
+
+        #region DELETE
+        // DELETE: api/Taches/45/Travaux/2023-11-23
+        [HttpDelete("{idTache}/Travaux/{date}")]
+        public async Task<IActionResult> DeleteTravail(int idTache, DateOnly date)
+        {
+            try
+            {
+                await _service.DeleteTravail(idTache, date);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return this.CustomResponseForError(ex);
+            }
+        }
+
+        // DELETE: api/Taches?personne=x&logiciel=y&version=z
+        [HttpDelete]
+        public async Task<IActionResult> DeleteTaches(
+            [FromQuery] string? personne, [FromQuery] string? logiciel, [FromQuery] float? version)
+        {
+            try
+            {
+                int nbSupr = await _service.DeleteTaches(personne, logiciel, version);
+                return Ok(nbSupr + " tâches supprimées");
+            }
+            catch (Exception ex)
+            {
+                return this.CustomResponseForError(ex);
+            }
+        }
+        #endregion
+
+        //private bool TacheExists(int id)
+        //{
+        //    return _context.Taches.Any(e => e.Id == id);
+        //}
 
         // PUT: api/Taches/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -127,29 +169,6 @@ namespace JobOverview.Controllers
         //    }
 
         //    return NoContent();
-        //}
-
-
-
-        // DELETE: api/Taches/5
-        //[HttpDelete("{id}")]
-        //public async Task<IActionResult> DeleteTache(int id)
-        //{
-        //    var tache = await _context.Taches.FindAsync(id);
-        //    if (tache == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    _context.Taches.Remove(tache);
-        //    await _context.SaveChangesAsync();
-
-        //    return NoContent();
-        //}
-
-        //private bool TacheExists(int id)
-        //{
-        //    return _context.Taches.Any(e => e.Id == id);
         //}
     }
 }
