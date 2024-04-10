@@ -1,6 +1,7 @@
-
 using JobOverview.Data;
 using JobOverview.Service;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 namespace JobOverview
@@ -23,6 +24,27 @@ namespace JobOverview
                 .UseSqlServer(connect)
                 //.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
                 .EnableSensitiveDataLogging());
+
+            #region Auth
+            // Ajoute le service d'authentification par porteur de jetons JWT
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+               .AddJwtBearer(options =>
+               {
+                   // url d'accès au serveur d'identité
+                   options.Authority = builder.Configuration["IdentityServerUrl"];
+                   options.TokenValidationParameters.ValidateAudience = false;
+
+                   // Tolérance sur la durée de validité du jeton
+                   options.TokenValidationParameters.ClockSkew = TimeSpan.Zero;
+               });
+
+            // Ajoute le service d'autorisation
+            builder.Services.AddAuthorization(options =>
+            {
+                // Spécifie que tout utilisateur de l'API doit être authentifié
+                options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+            });
+            #endregion
 
             builder.Services.AddScoped<IServiceLogiciels, ServiceLogiciels>();
             builder.Services.AddScoped<IServiceEquipes, ServiceEquipes>();

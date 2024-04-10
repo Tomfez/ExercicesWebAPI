@@ -5,7 +5,11 @@ VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JobOverview", "JobOverview\JobOverview.csproj", "{C7BCEFE6-8ECF-406C-92CE-0894B710E070}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HoteIdentityServer", "HoteIdentityServer\HoteIdentityServer.csproj", "{CA7207EC-E1B3-403F-85FB-AF22001193AE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HoteIdentityServer", "HoteIdentityServer\HoteIdentityServer.csproj", "{CA7207EC-E1B3-403F-85FB-AF22001193AE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorWasm.Backend", "Backend\BlazorWasm.Backend.csproj", "{DC0949BE-C73C-455B-9852-CF0015E408D3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorWasm.Frontend", "Frontend\BlazorWasm.Frontend.csproj", "{E38D35AB-8EFF-4539-96FD-A7507C576941}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +25,14 @@ Global
 		{CA7207EC-E1B3-403F-85FB-AF22001193AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CA7207EC-E1B3-403F-85FB-AF22001193AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CA7207EC-E1B3-403F-85FB-AF22001193AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DC0949BE-C73C-455B-9852-CF0015E408D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DC0949BE-C73C-455B-9852-CF0015E408D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DC0949BE-C73C-455B-9852-CF0015E408D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DC0949BE-C73C-455B-9852-CF0015E408D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E38D35AB-8EFF-4539-96FD-A7507C576941}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E38D35AB-8EFF-4539-96FD-A7507C576941}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E38D35AB-8EFF-4539-96FD-A7507C576941}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E38D35AB-8EFF-4539-96FD-A7507C576941}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
