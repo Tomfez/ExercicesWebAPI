@@ -28,8 +28,8 @@ else
         try
         {
             // response = await Http.GetStringAsync("/Taches");
-            // response = await Http.GetStringAsync("/Taches?logiciel=ANATOMIA&version=6");
-            response = await Http.GetStringAsync("/Logiciels/ANATOMIA");
+            response = await Http.GetStringAsync("/Taches?logiciel=ANATOMIA&version=6");
+            // response = await Http.GetStringAsync("/Logiciels/ANATOMIA");
 
             response = JsonSerializer.Serialize(JsonDocument.Parse(response),
                         new JsonSerializerOptions { WriteIndented = true });

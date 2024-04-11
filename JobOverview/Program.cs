@@ -43,6 +43,12 @@ namespace JobOverview
             {
                 // Spécifie que tout utilisateur de l'API doit être authentifié
                 options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+
+                // Seuls les managers peuvent gérer les tâches
+                options.AddPolicy("GererTaches", p => p.RequireClaim("manager"));
+
+                // Seuls les chefs de service peuvent gérer les équipes et les personnes
+                options.AddPolicy("GererEquipes", p => p.RequireClaim("métier", "CDS"));
             });
             #endregion
 

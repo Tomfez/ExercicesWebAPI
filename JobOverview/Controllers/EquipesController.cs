@@ -1,19 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using JobOverview.Data;
+﻿using Microsoft.AspNetCore.Mvc;
 using JobOverview.Entities;
 using JobOverview.Service;
+using Microsoft.AspNetCore.Authorization;
 
 namespace JobOverview.Controllers
 {
     // api/Filieres/BIOV/Equipes
     [Route("api/Filieres/{codeFiliere}/[controller]")]
     [ApiController]
+    [Authorize(Policy = "GererEquipes")]
     public class EquipesController : ControllerBase
     {
         private readonly IServiceEquipes _service;

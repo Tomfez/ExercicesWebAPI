@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using JobOverview.Data;
+﻿using Microsoft.AspNetCore.Mvc;
 using JobOverview.Entities;
 using JobOverview.Service;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace JobOverview.Controllers
 {
@@ -28,10 +23,26 @@ namespace JobOverview.Controllers
         public async Task<ActionResult<IEnumerable<Tache>>> GetTaches(
             [FromQuery] string? personne, [FromQuery] string? logiciel, [FromQuery] float? version)
         {
+            string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            // Si aucun filtre sur la personne, on filtre sur l'utilisateur courant
+            if (string.IsNullOrEmpty(personne))
+            {
+                personne = userId;
+            }
+            // Sinon, on vérifie que l'utilisateur courant est le manager de la personne
+            // Si ce n'est pas le cas, on renvoie une réponse de code 403
+            else
+            {
+                Personne? pers = await _service.GetPersonne(personne);
+                if (pers == null || pers.Manager != userId)
+                    return Forbid();
+            }
+
             List<Tache> res = await _service.GetTaches(personne, logiciel, version);
 
-            if (res.Count == 0)
-                return NotFound();
+            //if (res.Count == 0)
+            //    return NotFound();
 
             return Ok(res);
         }
@@ -120,6 +131,7 @@ namespace JobOverview.Controllers
 
         // DELETE: api/Taches?personne=x&logiciel=y&version=z
         [HttpDelete]
+        [Authorize(Policy = "GererTaches")]
         public async Task<IActionResult> DeleteTaches(
             [FromQuery] string? personne, [FromQuery] string? logiciel, [FromQuery] float? version)
         {
@@ -135,44 +147,10 @@ namespace JobOverview.Controllers
         }
         #endregion
 
-        //private bool TacheExists(int id)
-        //{
-        //    return _context.Taches.Any(e => e.Id == id);
-        //}
-
-        // PUT: api/Taches/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        //[HttpPut("{id}")]
-        //public async Task<IActionResult> PutTache(int id, Tache tache)
-        //{
-        //    if (id != tache.Id)
-        //    {
-        //        return BadRequest();
-        //    }
-
-        //    _context.Entry(tache).State = EntityState.Modified;
-
-        //    try
-        //    {
-        //        await _context.SaveChangesAsync();
-        //    }
-        //    catch (DbUpdateConcurrencyException)
-        //    {
-        //        if (!TacheExists(id))
-        //        {
-        //            return NotFound();
-        //        }
-        //        else
-        //        {
-        //            throw;
-        //        }
-        //    }
-
-        //    return NoContent();
-        //}
-
+        #region PUT
         // PUT: api/Taches/5
         [HttpPut]
+        [Authorize(Policy = "GererTaches")]
         public async Task<ActionResult<Tache>> PutTache(Tache tache)
         {
             try
@@ -180,7 +158,7 @@ namespace JobOverview.Controllers
                 Tache result = await _service.PutPostTache(tache);
 
                 // Si elle est ajoutée, EF renvoie 0
-                if(result.Id == 0)
+                if (result.Id == 0)
                     return CreatedAtAction(nameof(GetTache), new { result.Id }, result);
                 else
                     return Ok(result);
@@ -190,5 +168,6 @@ namespace JobOverview.Controllers
                 return this.CustomResponseForError(ex);
             }
         }
+        #endregion
     }
 }

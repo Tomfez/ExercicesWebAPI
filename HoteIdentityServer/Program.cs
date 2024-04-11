@@ -29,13 +29,13 @@ namespace HoteIdentityServer
 
                 // Crée des identités
                 .AddInMemoryIdentityResources(new IdentityResource[] {
-         new IdentityResources.OpenId(),
-         new IdentityResources.Profile(),
+                    new IdentityResources.OpenId(),
+                    new IdentityResources.Profile(),
                 })
 
                  // Etendue d'API "entreprise" et revendications
                  .AddInMemoryApiScopes(new ApiScope[] {
-            new ApiScope("entreprise", new[] { "métier", "manager" })
+                    new ApiScope("entreprise", new[] { "métier", "manager" })
                  })
 
                  // Configure une appli cliente
