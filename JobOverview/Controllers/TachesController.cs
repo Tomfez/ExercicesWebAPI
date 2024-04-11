@@ -19,7 +19,21 @@ namespace JobOverview.Controllers
 
         #region GET
         // GET: api/Taches?personne=x&logiciel=y&version=z
+        /// <summary>Liste de tâches filtrable</summary>
+        /// <remarks>
+        /// Obtient les tâches de l'utilisateur courant si aucun filtre de personne n'est appliqué,  
+        /// ou bien les tâches de la personne définie en filtre, si l'utilisateur courant est son manager.  
+        /// 
+        /// La liste est filtrable sur un logiciel et une version de logiciel.
+        /// </remarks>
+        /// <param name="personne">Pseudo de la personne dont on souhaite obtenir les tâches</param>
+        /// <param name="logiciel">Code du logciel concerné</param>
+        /// <param name="version">N° de version du logiciel</param>
+        /// <response code="200">Liste des tâches</response>
+        /// <response code="403">L'utilisateur courant n'est pas autorisé à obtenir la liste des tâches, car il n'est pas le manager de la personne spécifiée</response>
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<IEnumerable<Tache>>> GetTaches(
             [FromQuery] string? personne, [FromQuery] string? logiciel, [FromQuery] float? version)
         {
@@ -149,8 +163,22 @@ namespace JobOverview.Controllers
 
         #region PUT
         // PUT: api/Taches/5
+        /// <summary>Crée ou modifie une tâche</summary>
+        /// <remarks>
+        /// Si la tâche passée en paramètre à un id = 0, ajoute cette tâche dans la base,  
+        /// sinon, modifie la tâche existante en base 
+        /// </remarks>
+        /// <param name="tache">Tâche à créer ou à modifier</param>
+        /// <response code="200">Renvoie la tâche modifiée</response>
+        /// <response code="201">Renvoie la tâche créée</response>
+        /// <response code="400">Erreur si la personne spécifiée n'existe pas, ou si l'activité de la tâche ne fait pas partie de celles de la personne</response>
+        /// <response code="403">L'utilisateur courant n'est pas autorisé à créer ou modifier des tâches</response>
         [HttpPut]
         [Authorize(Policy = "GererTaches")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<Tache>> PutTache(Tache tache)
         {
             try

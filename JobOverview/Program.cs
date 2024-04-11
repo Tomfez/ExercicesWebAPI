@@ -16,8 +16,13 @@ namespace JobOverview
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            //builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddOpenApiDocument(options =>
+            {
+                options.Title = "API JobOverview";
+                options.Description = "<strong>API JobOverview pour formation ASP.Net Core.<br/>Code dispo sur <a href='https://github.com/developpeur-pro/ExercicesWebAPI'>ce référentiel GitHub</a></strong>";
+                options.Version = "v1";
+            });
 
             string? connect = builder.Configuration.GetConnectionString("JobOverviewConnect");
             builder.Services.AddDbContext<ContexteJobOverview>(opt => opt
@@ -58,10 +63,11 @@ namespace JobOverview
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
+            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
-                app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseOpenApi();
+                app.UseSwaggerUi();
             }
 
             app.UseHttpsRedirection();
