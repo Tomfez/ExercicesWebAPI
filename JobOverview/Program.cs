@@ -77,6 +77,10 @@ namespace JobOverview
 
             app.MapControllers();
 
+            ControllerActionEndpointConventionBuilder? endpointBuilder = app.MapControllers();
+            if (app.Environment.IsDevelopment())
+                endpointBuilder.AllowAnonymous();
+
             app.Run();
         }
     }
