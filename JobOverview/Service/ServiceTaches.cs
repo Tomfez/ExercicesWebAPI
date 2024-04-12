@@ -3,6 +3,7 @@ using JobOverview.Entities;
 using JobOverview.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Mono.TextTemplating.CodeCompilation;
 
 namespace JobOverview.Service
@@ -145,6 +146,10 @@ namespace JobOverview.Service
                 throw new ValidationRulesException("Date", "Aucun travail trouvé à la date donnée");
 
             tache.DureeRestante += travail.Heures;
+
+            // Rattache l'entité au suivi, sans ses filles, en passant son état à Modified
+            EntityEntry<Tache> ent = _context.Entry(tache);
+            ent.State = EntityState.Modified;
 
             _context.Remove(travail);
 
