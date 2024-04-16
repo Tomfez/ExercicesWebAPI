@@ -3,10 +3,13 @@ using JobOverview.Entities;
 using JobOverview.Service;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using Asp.Versioning;
 
 namespace JobOverview.Controllers
 {
     [Route("api/[controller]")]
+    [ApiVersion("1.0")]
+    [ApiVersion("2.0")]
     [ApiController]
     public class TachesController : ControllerBase
     {

@@ -3,7 +3,7 @@ using JobOverview.Entities;
 using JobOverview.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
-namespace JobOverview.Service
+namespace JobOverview.V1.Services
 {
     public interface IServiceEquipes
     {

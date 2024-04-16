@@ -10,10 +10,13 @@ using JobOverview.Entities;
 using JobOverview.Service;
 using Version = JobOverview.Entities.Version;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Asp.Versioning;
 
 namespace JobOverview.Controllers
 {
     [Route("api/[controller]")]
+    [ApiVersion("1.0")]
+    [ApiVersion("2.0")]
     [ApiController]
     public class LogicielsController : ControllerBase
     {
