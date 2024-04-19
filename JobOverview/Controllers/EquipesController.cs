@@ -1,17 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using JobOverview.Entities;
+using JobOverview.Service;
 using Microsoft.AspNetCore.Authorization;
-using JobOverview.Controllers;
-using Asp.Versioning;
-using JobOverview.V2.Services;
 
-namespace JobOverview.V2.Controllers
+namespace JobOverview.Controllers
 {
     // api/Filieres/BIOV/Equipes
     [Route("api/Filieres/{codeFiliere}/[controller]")]
     [ApiController]
-    [Route("api/v{version:apiVersion}/[controller]")]
-    [ApiVersion(2.0)]
     [Authorize(Policy = "GererEquipes")]
     public class EquipesController : ControllerBase
     {

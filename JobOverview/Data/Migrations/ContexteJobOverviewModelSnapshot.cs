@@ -212,11 +212,6 @@ namespace JobOverview.Data.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(20)");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(60)
-                        .HasColumnType("nvarchar(60)");
-
                     b.Property<string>("Manager")
                         .HasMaxLength(20)
                         .IsUnicode(false)
@@ -526,7 +521,7 @@ namespace JobOverview.Data.Migrations
             modelBuilder.Entity("JobOverview.Entities.Travail", b =>
                 {
                     b.HasOne("JobOverview.Entities.Tache", null)
-                        .WithMany("Travaux")
+                        .WithMany()
                         .HasForeignKey("IdTache")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -556,11 +551,6 @@ namespace JobOverview.Data.Migrations
             modelBuilder.Entity("JobOverview.Entities.Module", b =>
                 {
                     b.Navigation("SousModules");
-                });
-
-            modelBuilder.Entity("JobOverview.Entities.Tache", b =>
-                {
-                    b.Navigation("Travaux");
                 });
 
             modelBuilder.Entity("JobOverview.Entities.Version", b =>

@@ -119,7 +119,6 @@ namespace JobOverview.Data
                 entity.Property(e => e.Pseudo).HasMaxLength(20).IsUnicode(false);
                 entity.Property(e => e.Nom).HasMaxLength(60);
                 entity.Property(e => e.Prenom).HasMaxLength(60);
-                entity.Property(e => e.Email).HasMaxLength(60);
                 entity.Property(e => e.TauxProductivite).HasColumnType("decimal(3,2)").HasDefaultValue(1);
                 entity.Property(e => e.CodeEquipe).HasMaxLength(20).IsUnicode(false);
                 entity.Property(e => e.CodeMetier).HasMaxLength(20).IsUnicode(false);
