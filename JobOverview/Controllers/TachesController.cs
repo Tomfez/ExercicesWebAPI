@@ -179,11 +179,15 @@ namespace JobOverview.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<Tache>> PutTache(Tache tache)
         {
             try
             {
-                Tache result = await _service.PutPostTache(tache);
+                Tache? result = await _service.PutPostTache(tache);
+
+                if (result == null)
+                    return NotFound("La tâche a été supprimée par un autre utilisateur.");
 
                 // Si elle est ajoutée, EF renvoie 0
                 if (result.Id == 0)

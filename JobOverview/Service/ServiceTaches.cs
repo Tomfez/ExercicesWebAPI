@@ -18,7 +18,7 @@ namespace JobOverview.Service
         public Task<Travail> PostTravail(int idTache, Travail travail);
         public Task DeleteTravail(int idTache, DateOnly date);
         public Task<int> DeleteTaches(string? personne, string? logiciel, float? version);
-        public Task<Tache> PutPostTache(Tache tache);
+        public Task<Tache?> PutPostTache(Tache tache);
     }
 
     public class ServiceTaches : IServiceTaches
@@ -194,11 +194,25 @@ namespace JobOverview.Service
         }
         #endregion
 
-        public async Task<Tache> PutPostTache(Tache tache)
+        public async Task<Tache?> PutPostTache(Tache tache)
         {
+            // Dans le cas d'une modification
+            if (tache.Id != 0)
+            {
+                var req = from t in _context.Taches.AsNoTracking()
+                          where t.Id == tache.Id
+                          select t.Id;
+
+                if (await req.FirstOrDefaultAsync() == 0)
+                    return null;
+            }
+
             tache.Travaux = null!;
 
             _context.Taches.Update(tache);
+
+            // Génère une nouvelle valeur de jeton d'accès concurrentiel
+            tache.Vers = Guid.NewGuid();
             await _context.SaveChangesAsync();
 
             return tache;

@@ -59,6 +59,10 @@ namespace JobOverview.Data
                         break;
                 }
             }
+            else if (ex is DbUpdateConcurrencyException)
+            {
+                err = (HttpStatusCode.Conflict, "Cet enregistrement a été modifié en base par un autre utilisateur depuis son obtention.");
+            }
             else err = (HttpStatusCode.BadRequest, ex.Message);
 
             return new ProblemDetails

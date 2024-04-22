@@ -145,6 +145,7 @@ namespace JobOverview.Data
                 entity.Property(e => e.DureePrevue).HasColumnType("decimal(3, 1)");
                 entity.Property(e => e.DureeRestante).HasColumnType("decimal(3, 1)");
                 entity.Property(e => e.Description).HasMaxLength(1000);
+                entity.Property(e => e.Vers).IsConcurrencyToken();
 
                 entity.HasOne<Activite>().WithMany().HasForeignKey(d => d.CodeActivite)
                    .OnDelete(DeleteBehavior.NoAction);

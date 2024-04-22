@@ -12,6 +12,8 @@
         public string CodeModule { get; set; } = string.Empty;
         public float NumVersion { get;set; }
         public string? Description { get; set; }
+        // Jeton d'accès concurrentiel
+        public Guid Vers { get; set; }
         public List<Travail> Travaux { get; set; } = new();
     }
 }
