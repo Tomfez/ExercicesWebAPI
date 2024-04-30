@@ -36,10 +36,10 @@ namespace TestJobOverview
             int idTache = 1;
             int nbTravaux = 9;
 
-            Tache? tache = await _service.GetTache(idTache);
+            var tache = await _service.GetTache(idTache);
 
-            Assert.IsNotNull(tache);
-            Assert.AreEqual(nbTravaux, tache.Travaux.Count);
+            Assert.IsNotNull(tache.Data);
+            Assert.AreEqual(nbTravaux, tache.Data.Travaux.Count);
         }
 
         [TestMethod]
@@ -48,10 +48,10 @@ namespace TestJobOverview
             int idTache = 1;
             int nbTravaux = 9;
 
-            Tache? tache = await _service.GetTache(idTache);
+            var tache = await _service.GetTache(idTache);
 
-            Assert.IsNotNull(tache);
-            Assert.AreEqual(nbTravaux, tache.Travaux.Count);
+            Assert.IsNotNull(tache.Data);
+            Assert.AreEqual(nbTravaux, tache.Data.Travaux.Count);
         }
 
         [TestMethod()]
@@ -102,12 +102,12 @@ namespace TestJobOverview
 
             // Récupère la tâche modifiée et enlève ses travaux pour pouvoir
             // la comparer à la tâche initiale
-            Tache? tacheLue = await _service.GetTache(tache.Id);
-            if (tacheLue != null) tacheLue.Travaux = null!;
+            var tacheLue = await _service.GetTache(tache.Id);
+            if (tacheLue.Data != null) tacheLue.Data.Travaux = null!;
 
             // Pour comparer les 2 objets, on les sérialise en JSON
             string json1 = JsonSerializer.Serialize(tache, TestInit.JsonOptions);
-            string json2 = JsonSerializer.Serialize(tacheLue, TestInit.JsonOptions);
+            string json2 = JsonSerializer.Serialize(tacheLue.Data, TestInit.JsonOptions);
 
             Assert.AreEqual(json1, json2);
         }
@@ -151,13 +151,13 @@ namespace TestJobOverview
             };
 
             await _service.PostTravail(idTache, travail);
-            Tache? tache = await _service.GetTache(idTache);
+            var tache = await _service.GetTache(idTache);
 
             // Vérifie que le travail a été ajouté
-            Assert.AreEqual(12, tache?.Travaux.Count, "Nombre travaux");
+            Assert.AreEqual(12, tache.Data?.Travaux.Count, "Nombre travaux");
 
             // Vérifie que la durée restante sur la tâche a été diminuée
-            Assert.AreEqual(12, tache?.DureeRestante, "Durée restante");
+            Assert.AreEqual(12, tache.Data?.DureeRestante, "Durée restante");
         }
 
         [TestMethod]
@@ -187,13 +187,13 @@ namespace TestJobOverview
 
             // Supprime le travail et récupère la tâche correspondante
             await _service.DeleteTravail(idTache, travail.DateTravail);
-            Tache? tache = await _service.GetTache(idTache);
+            var tache = await _service.GetTache(idTache);
 
             // Vérifie que le travail a été supprimé sur la tâche
-            Assert.AreEqual(nbTravaux - 1, tache?.Travaux.Count);
+            Assert.AreEqual(nbTravaux - 1, tache.Data?.Travaux.Count);
 
             // Vérifie que la durée restante sur la tâche a été augmentée
-            Assert.AreEqual(duréeRest + travail.Heures, tache?.DureeRestante);
+            Assert.AreEqual(duréeRest + travail.Heures, tache.Data?.DureeRestante);
         }
 
         [DataTestMethod]
@@ -201,9 +201,9 @@ namespace TestJobOverview
         [DataRow("AZERTY", null, null, 0)]
         public async Task SupprimerTaches(string? personne, string? logiciel, float? version, int nbTaches)
         {
-            int nbSuppr = await _service.DeleteTaches(personne, logiciel, version);
+            var nbSuppr = await _service.DeleteTaches(personne, logiciel, version);
 
-            Assert.AreEqual(nbTaches, nbSuppr);
+            Assert.AreEqual(nbTaches, nbSuppr.Data);
         }
     }
 }

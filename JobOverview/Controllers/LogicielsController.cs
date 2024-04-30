@@ -1,30 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using JobOverview.Data;
+﻿using Microsoft.AspNetCore.Mvc;
 using JobOverview.Entities;
 using JobOverview.Service;
 using Version = JobOverview.Entities.Version;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using JobOverview.Tools;
 
 namespace JobOverview.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class LogicielsController : ControllerBase
+    public class LogicielsController(IServiceLogiciels service, ILogger<LogicielsController> logger) : ControllerBase
     {
-        private readonly IServiceLogiciels _service;
-        private readonly ILogger<LogicielsController> _logger;
-
-        public LogicielsController(IServiceLogiciels service, ILogger<LogicielsController> logger)
-        {
-            _service = service;
-            _logger = logger;
-        }
+        private readonly IServiceLogiciels _service = service;
+        private readonly ILogger<LogicielsController> _logger = logger;
 
         #region GET
         // GET: api/Logiciels
@@ -32,7 +19,7 @@ namespace JobOverview.Controllers
         public async Task<ActionResult<IEnumerable<Logiciel>>> GetLogiciels([FromQuery] string? codeFiliere)
         {
             var logiciels = await _service.GetLogiciels(codeFiliere);
-            return Ok(logiciels);
+            return logiciels.ConvertToObjectResult();
         }
 
         // GET: api/Logiciels/GENOMICA
@@ -40,13 +27,7 @@ namespace JobOverview.Controllers
         public async Task<ActionResult<Logiciel>> GetLogiciel(string code)
         {
             var logiciel = await _service.GetLogiciel(code);
-
-            if (logiciel == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(logiciel);
+            return logiciel.ConvertToObjectResult();
         }
 
         // GET: api/Logiciels/GENOMICA/versions?millesime=2023
@@ -54,13 +35,7 @@ namespace JobOverview.Controllers
         public async Task<ActionResult<Version?>> GetVersions(string code, [FromQuery] short? millesime)
         {
             var versions = await _service.GetVersionsLogiciel(code, millesime);
-
-            if (versions == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(versions);
+            return versions.ConvertToObjectResult();
         }
 
         // GET: api/Logiciels/GENOMICA/Versions/1.00/Releases/30
@@ -68,11 +43,7 @@ namespace JobOverview.Controllers
         public async Task<ActionResult<Release?>> GetRelease(string codeLogiciel, float numVersion, short numRelease)
         {
             var release = await _service.GetRelease(codeLogiciel, numVersion, numRelease);
-
-            if (release == null)
-                return NotFound();
-
-            return Ok(release);
+            return release.ConvertToObjectResult();
         }
         #endregion
 
@@ -96,113 +67,23 @@ namespace JobOverview.Controllers
                 release.Notes = await reader.ReadToEndAsync();
             }
 
-            try
-            {
-                Release res = await _service.PostRelease(codeLogiciel, numVersion, release);
+            var res = await _service.PostRelease(codeLogiciel, numVersion, release);
 
-                object key = new { codeLogiciel = res.CodeLogiciel, numVersion = res.NumeroVersion, numRelease = res.Numero };
-                string uri = Url.Action(nameof(PostRelease), key) ?? "";
-                return Created(uri, res);
-            }
-            catch (Exception ex)
-            {
+            object key = new { codeLogiciel = res.Data?.CodeLogiciel, numVersion = res.Data?.NumeroVersion, numRelease = res.Data?.Numero };
 
-                return this.CustomResponseForError(ex, formRel, _logger);
-            }
+            string uri = Url.Action(nameof(PostRelease), key) ?? "";
+
+            return res.ConvertToObjectResult(uri);
         }
 
         // POST:api/Logiciels/GENOMICA/versions
         [HttpPost("{codeLogiciel}/versions/")]
         public async Task<ActionResult<Version>> PostVersion(string codeLogiciel, Version version)
         {
-            try
-            {
-            Version res = await _service.PostVersion(codeLogiciel, version);
-            return CreatedAtAction(nameof(GetVersions), new {codeLogiciel}, res);
-            }
-            catch (Exception ex )
-            {
-                return this.CustomResponseForError(ex, version, _logger);
-            }
+            var res = await _service.PostVersion(codeLogiciel, version);
+            return res.ConvertToObjectResult();
         }
 
         #endregion
-
-        //// PUT: api/Logiciels/5
-        //// To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        //[HttpPut("{id}")]
-        //public async Task<IActionResult> PutLogiciel(string id, Logiciel logiciel)
-        //{
-        //    if (id != logiciel.Code)
-        //    {
-        //        return BadRequest();
-        //    }
-
-        //    _context.Entry(logiciel).State = EntityState.Modified;
-
-        //    try
-        //    {
-        //        await _context.SaveChangesAsync();
-        //    }
-        //    catch (DbUpdateConcurrencyException)
-        //    {
-        //        if (!LogicielExists(id))
-        //        {
-        //            return NotFound();
-        //        }
-        //        else
-        //        {
-        //            throw;
-        //        }
-        //    }
-
-        //    return NoContent();
-        //}
-
-        //// POST: api/Logiciels
-        //// To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        //[HttpPost]
-        //public async Task<ActionResult<Logiciel>> PostLogiciel(Logiciel logiciel)
-        //{
-        //    _context.Logiciels.Add(logiciel);
-        //    try
-        //    {
-        //        await _context.SaveChangesAsync();
-        //    }
-        //    catch (DbUpdateException)
-        //    {
-        //        if (LogicielExists(logiciel.Code))
-        //        {
-        //            return Conflict();
-        //        }
-        //        else
-        //        {
-        //            throw;
-        //        }
-        //    }
-
-        //    return CreatedAtAction("GetLogiciel", new { id = logiciel.Code }, logiciel);
-        //}
-
-        //// DELETE: api/Logiciels/5
-        //[HttpDelete("{id}")]
-        //public async Task<IActionResult> DeleteLogiciel(string id)
-        //{
-        //    var logiciel = await _context.Logiciels.FindAsync(id);
-        //    if (logiciel == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    _context.Logiciels.Remove(logiciel);
-        //    await _context.SaveChangesAsync();
-
-        //    return NoContent();
-        //}
-
-        //private bool LogicielExists(string id)
-        //{
-        //    return _context.Logiciels.Any(e => e.Code == id);
-        //}
     }
 }

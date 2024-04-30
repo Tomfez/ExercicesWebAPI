@@ -1,9 +1,9 @@
 ﻿using JobOverview.Data;
 using JobOverview.Entities;
 using JobOverview.Exceptions;
+using JobOverview.Tools;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System;
 using System.Text.RegularExpressions;
 using Version = JobOverview.Entities.Version;
 
@@ -11,33 +11,31 @@ namespace JobOverview.Service
 {
     public interface IServiceLogiciels
     {
-        Task<List<Logiciel>> GetLogiciels(string? codeFiliere);
-        Task<Logiciel?> GetLogiciel(string code);
-        Task<List<Version>?> GetVersionsLogiciel(string code, short? millesime);
-        Task<Release?> GetRelease(string codeLogiciel, float numVersion, short numRelease);
-        Task<Release> PostRelease(string codeLogiciel, float numVersion, Release release);
-        Task<Version> PostVersion(string codeLogiciel, Version version);
+        Task<ServiceResult<List<Logiciel>>> GetLogiciels(string? codeFiliere);
+        Task<ServiceResult<Logiciel?>> GetLogiciel(string code);
+        Task<ServiceResult<List<Version>?>> GetVersionsLogiciel(string code, short? millesime);
+        Task<ServiceResult<Release?>> GetRelease(string codeLogiciel, float numVersion, short numRelease);
+        Task<ServiceResult<Release?>> PostRelease(string codeLogiciel, float numVersion, Release release);
+        Task<ServiceResult<Version?>> PostVersion(string codeLogiciel, Version version);
     }
 
-    public class ServiceLogiciels : IServiceLogiciels
+    public class ServiceLogiciels(ContexteJobOverview context) : ServiceBase(context), IServiceLogiciels
     {
-        private readonly ContexteJobOverview _context;
-        public ServiceLogiciels(ContexteJobOverview context)
-        {
-            _context = context;
-        }
+        private readonly ContexteJobOverview _context = context;
 
         #region GET
-        public async Task<List<Logiciel>> GetLogiciels(string? codeFiliere)
+        public async Task<ServiceResult<List<Logiciel>>> GetLogiciels(string? codeFiliere)
         {
             IQueryable<Logiciel> req = from l in _context.Logiciels
                                        where l.CodeFiliere == codeFiliere
                                        select l;
 
-            return await req.ToListAsync();
+            var res = await req.ToListAsync();
+
+            return ResultOk(res);
         }
 
-        public async Task<Logiciel?> GetLogiciel(string code)
+        public async Task<ServiceResult<Logiciel?>> GetLogiciel(string code)
         {
             // Récupère le logiciel et ses données à plat
             var req = from l in _context.Logiciels
@@ -49,7 +47,7 @@ namespace JobOverview.Service
             Logiciel? logiciel = await req.FirstOrDefaultAsync();
 
             if (logiciel == null)
-                return null;
+                return ResultNotFound<Logiciel?>(code);
 
             var req2 = from m in logiciel.Modules
                        where m.CodeModuleParent == null
@@ -62,15 +60,13 @@ namespace JobOverview.Service
                        };
 
             logiciel.Modules = req2.ToList();
-            return logiciel;
-
-            //return await _context.Logiciels.FindAsync(code);
+            return ResultOk<Logiciel?>(logiciel);
         }
 
-        public async Task<List<Version>?> GetVersionsLogiciel(string code, short? millesime)
+        public async Task<ServiceResult<List<Version>?>> GetVersionsLogiciel(string code, short? millesime)
         {
             if (await _context.Logiciels.FindAsync(code) == null)
-                return null;
+                return ResultNotFound<List<Version>?>(code);
 
             IQueryable<Version> req = from v in _context.Versions
                        .Include(v => v.Releases)
@@ -78,17 +74,19 @@ namespace JobOverview.Service
                                       (millesime == null || v.Millesime == millesime)
                                       select v;
 
-            return await req.ToListAsync();
+            var res = await req.ToListAsync();
+            return ResultOk<List<Version>?>(res);
         }
 
-        public async Task<Release?> GetRelease(string codeLogiciel, float numVersion, short numRelease)
+        public async Task<ServiceResult<Release?>> GetRelease(string codeLogiciel, float numVersion, short numRelease)
         {
-            return await _context.Releases.FindAsync(numRelease, numVersion, codeLogiciel);
+            var res = await _context.Releases.FindAsync(numRelease, numVersion, codeLogiciel);
+            return ResultOkOrNotFound(numRelease, res);
         }
         #endregion
 
         #region POST
-        public async Task<Release> PostRelease(string codeLogiciel, float numVersion, Release release)
+        public async Task<ServiceResult<Release?>> PostRelease(string codeLogiciel, float numVersion, Release release)
         {
             var req = from r in _context.Releases
                       where r.CodeLogiciel == codeLogiciel
@@ -123,11 +121,10 @@ namespace JobOverview.Service
             }
 
             _context.Releases.Add(release);
-            await _context.SaveChangesAsync();
-            return release;
+            return await SaveAndResultCreatedAsync<Release?>(release);
         }
 
-        public async Task<Version> PostVersion(string codeLogiciel, Version version)
+        public async Task<ServiceResult<Version?>> PostVersion(string codeLogiciel, Version version)
         {
             ValidationRulesException vre = new ValidationRulesException();
             Regex regex = new Regex(@"^\d{1,3}(.\d{1,2})?$");
@@ -148,8 +145,7 @@ namespace JobOverview.Service
             version.CodeLogiciel = codeLogiciel;
 
             _context.Versions.Add(version);
-            await _context.SaveChangesAsync();
-            return version;
+            return await SaveAndResultCreatedAsync<Version?>(version);
         }
         #endregion
     }

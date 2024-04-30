@@ -1,42 +1,36 @@
 ﻿using JobOverview.Data;
 using JobOverview.Entities;
-using JobOverview.Exceptions;
+using JobOverview.Tools;
 using Microsoft.EntityFrameworkCore;
 
 namespace JobOverview.Service
 {
     public interface IServiceEquipes
     {
-        public Task<List<Equipe>?> GetEquipes(string codeFiliere);
-        public Task<Equipe?> GetEquipe(string codeFiliere, string nomEquipe);
-        public Task<Equipe> PostEquipe(string codeFiliere, Equipe equipe);
-        public Task<Personne> PostPersonne(string nomEquipe, Personne personne);
-        public Task<int> PutPersonne(string codeEquipe, string pseudo);
+        public Task<ServiceResult<List<Equipe>?>> GetEquipes(string codeFiliere);
+        public Task<ServiceResult<Equipe?>> GetEquipe(string codeFiliere, string nomEquipe);
+        public Task<ServiceResult<Equipe?>> PostEquipe(string codeFiliere, Equipe equipe);
+        public Task<ServiceResult<Personne?>> PostPersonne(string nomEquipe, Personne personne);
+        public Task<ServiceResult<int>> PutPersonne(string codeEquipe, string pseudo);
     }
 
-    public class ServiceEquipes : IServiceEquipes
+    public class ServiceEquipes(ContexteJobOverview context) : ServiceBase(context), IServiceEquipes
     {
-        private readonly ContexteJobOverview _context;
-        public ServiceEquipes(ContexteJobOverview context)
-        {
-            _context = context;
-        }
+        private readonly ContexteJobOverview _context = context;
 
         #region GET
-        public async Task<List<Equipe>?> GetEquipes(string codeFiliere)
+        public async Task<ServiceResult<List<Equipe>?>> GetEquipes(string codeFiliere)
         {
-            if (await _context.Filieres.FindAsync(codeFiliere) == null)
-                return null;
-
             var req = from e in _context.Equipes
                       .Include(e => e.Service)
                       where e.CodeFiliere == codeFiliere
                       select e;
 
-            return await req.ToListAsync();
+            var equipes = await req.ToListAsync();
+            return ResultOkOrNotFound(codeFiliere, equipes);
         }
 
-        public async Task<Equipe?> GetEquipe(string codeFiliere, string nomEquipe)
+        public async Task<ServiceResult<Equipe?>> GetEquipe(string codeFiliere, string nomEquipe)
         {
             var req2 = from e in _context.Equipes
                        .Include(e => e.Service)
@@ -45,12 +39,13 @@ namespace JobOverview.Service
                        where e.Code == nomEquipe
                        select e;
 
-            return await req2.FirstOrDefaultAsync();
+            var equipe = await req2.FirstOrDefaultAsync();
+            return ResultOk(equipe);
         }
         #endregion
 
         #region POST
-        public async Task<Equipe> PostEquipe(string codeFiliere, Equipe equipe)
+        public async Task<ServiceResult<Equipe?>> PostEquipe(string codeFiliere, Equipe equipe)
         {
             equipe.Service = null;
             equipe.CodeFiliere = codeFiliere;
@@ -61,22 +56,21 @@ namespace JobOverview.Service
             }
 
             _context.Equipes.Add(equipe);
-            await _context.SaveChangesAsync();
-            return equipe;
+            return await SaveAndResultCreatedAsync(equipe);
         }
 
-        public async Task<Personne> PostPersonne(string nomEquipe, Personne personne)
+        public async Task<ServiceResult<Personne?>> PostPersonne(string nomEquipe, Personne personne)
         {
             personne.CodeEquipe = nomEquipe;
 
             _context.Personnes.Add(personne);
-            await _context.SaveChangesAsync();
-            return personne;
+
+            return await SaveAndResultCreatedAsync(personne);
         }
         #endregion
 
         #region PUT
-        public async Task<int> PutPersonne(string codeEquipe, string pseudo)
+        public async Task<ServiceResult<int>> PutPersonne(string codeEquipe, string pseudo)
         {
             using (var transaction = _context.Database.BeginTransaction())
             {
@@ -91,7 +85,7 @@ namespace JobOverview.Service
                     .ExecuteUpdateAsync(setter => setter.SetProperty(p => p.Manager, (string?)null));
 
                 transaction.Commit();
-                return nbModifs;
+                return ResultOk(nbModifs);
             }
         }
         #endregion

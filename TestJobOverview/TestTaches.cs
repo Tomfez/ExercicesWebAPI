@@ -36,27 +36,27 @@ namespace TestJobOverview
         [DataRow(null, "ANATOMIA", null, 5)]
         public async Task ObtenirTaches(string? personne, string? logiciel, float? version, int nbLignes)
         {
-            List<Tache>? taches = await _serviceTaches.GetTaches(personne, logiciel, version);
+            var taches = await _serviceTaches.GetTaches(personne, logiciel, version);
 
-            Assert.AreEqual(nbLignes, taches.Count);
+            Assert.AreEqual(nbLignes, taches.Data.Count);
         }
 
         [TestMethod]
         public async Task ObtenirTache()
         {
-            Tache? tache = await _serviceTaches.GetTache(2);
+            var tache = await _serviceTaches.GetTache(2);
 
-            Assert.IsNotNull(tache);
-            Assert.AreEqual("RBEAUMONT", tache.Personne);
+            Assert.IsNotNull(tache.Data);
+            Assert.AreEqual("RBEAUMONT", tache.Data.Personne);
         }
 
         [TestMethod]
         public async Task ObtenirPersonne()
         {
-            Personne? personne = await _serviceTaches.GetPersonne("RBEAUMONT");
+            var personne = await _serviceTaches.GetPersonne("RBEAUMONT");
 
-            Assert.IsNotNull(personne);
-            Assert.AreEqual("BNORMAND", personne.Manager);
+            Assert.IsNotNull(personne.Data);
+            Assert.AreEqual("BNORMAND", personne.Data.Manager);
         }
 
         [TestMethod]
@@ -95,9 +95,9 @@ namespace TestJobOverview
         [DataRow(null, "ANATOMIA", null, 6)]
         public async Task SupprimerTache(string? personne, string? logiciel, float? version, int expected)
         {
-            int nbSupr = await _serviceTaches.DeleteTaches(personne, logiciel, version);
+            var nbSupr = await _serviceTaches.DeleteTaches(personne, logiciel, version);
 
-            Assert.AreEqual(0, nbSupr);
+            Assert.AreEqual(0, nbSupr.Data);
         }
     }
 }

@@ -1,36 +1,31 @@
 ﻿using JobOverview.Data;
 using JobOverview.Entities;
 using JobOverview.Exceptions;
-using Microsoft.AspNetCore.Mvc;
+using JobOverview.Tools;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Mono.TextTemplating.CodeCompilation;
 
 namespace JobOverview.Service
 {
     public interface IServiceTaches
     {
-        public Task<List<Tache>> GetTaches(string? personne, string? logiciel, float? version);
-        public Task<Tache?> GetTache(int id);
-        public Task<List<Travail>> GetTravaux(int idTache);
-        public Task<Personne?> GetPersonne(string pseudo);
-        public Task<Tache> PostTache(Tache tache);
-        public Task<Travail> PostTravail(int idTache, Travail travail);
-        public Task DeleteTravail(int idTache, DateOnly date);
-        public Task<int> DeleteTaches(string? personne, string? logiciel, float? version);
-        public Task<Tache?> PutPostTache(Tache tache);
+        public Task<ServiceResult<List<Tache>>> GetTaches(string? personne, string? logiciel, float? version);
+        public Task<ServiceResult<Tache?>> GetTache(int id);
+        public Task<ServiceResult<List<Travail>>> GetTravaux(int idTache);
+        public Task<ServiceResult<Personne?>> GetPersonne(string pseudo);
+        public Task<ServiceResult<Tache?>> PostTache(Tache tache);
+        public Task<ServiceResult<Travail?>> PostTravail(int idTache, Travail travail);
+        public Task<ServiceResult<int>> DeleteTravail(int idTache, DateOnly date);
+        public Task<ServiceResult<int>> DeleteTaches(string? personne, string? logiciel, float? version);
+        public Task<ServiceResult<Tache?>> PutPostTache(Tache tache);
     }
 
-    public class ServiceTaches : IServiceTaches
+    public class ServiceTaches(ContexteJobOverview context) : ServiceBase(context), IServiceTaches
     {
-        private readonly ContexteJobOverview _context;
-        public ServiceTaches(ContexteJobOverview context)
-        {
-            _context = context;
-        }
+        private readonly ContexteJobOverview _context = context;
 
         #region GET
-        public async Task<List<Tache>> GetTaches(string? personne, string? logiciel, float? version)
+        public async Task<ServiceResult<List<Tache>>> GetTaches(string? personne, string? logiciel, float? version)
         {
             var req = from t in _context.Taches
                       where (personne == null || t.Personne == personne)
@@ -39,20 +34,22 @@ namespace JobOverview.Service
                       orderby t.CodeLogiciel, t.NumVersion
                       select t;
 
-            return await req.ToListAsync();
+            var taches = await req.ToListAsync();
+            return ResultOk(taches);
         }
 
-        public async Task<Tache?> GetTache(int id)
+        public async Task<ServiceResult<Tache?>> GetTache(int id)
         {
             var req = from t in _context.Taches
                       .Include(tr => tr.Travaux.OrderBy(x => x.DateTravail))
                       where t.Id == id
                       select t;
 
-            return await req.FirstOrDefaultAsync();
+            var tache = await req.FirstOrDefaultAsync();
+            return ResultOkOrNotFound(id, tache);
         }
 
-        public async Task<Personne?> GetPersonne(string pseudo)
+        public async Task<ServiceResult<Personne?>> GetPersonne(string pseudo)
         {
             var req = from p in _context.Personnes
                       .Include(p => p.Metier)
@@ -60,21 +57,23 @@ namespace JobOverview.Service
                       where p.Pseudo == pseudo
                       select p;
 
-            return await req.FirstOrDefaultAsync();
+            var personne = await req.FirstOrDefaultAsync();
+            return ResultOkOrNotFound(pseudo, personne);
         }
 
-        public async Task<List<Travail>> GetTravaux(int idTache)
+        public async Task<ServiceResult<List<Travail>>> GetTravaux(int idTache)
         {
             var req = from t in _context.Travaux
                       where t.IdTache == idTache
                       select t;
 
-            return await req.ToListAsync();
+            var travaux = await req.ToListAsync();
+            return ResultOk(travaux);
         }
         #endregion
 
         #region POST
-        public async Task<Tache> PostTache(Tache tache)
+        public async Task<ServiceResult<Tache?>> PostTache(Tache tache)
         {
             tache.Travaux = null!;
             Tache? findTache = await _context.Taches.FindAsync(tache.Id);
@@ -87,20 +86,19 @@ namespace JobOverview.Service
                 throw vre;
             }
 
-            Personne? p = await GetPersonne(tache.Personne);
-            if (p == null)
-                throw new ValidationRulesException("Personne", $"Personne {tache.Personne} non trouvée");
+            var p = await GetPersonne(tache.Personne);
+            if (p.ResultKind != ResultKinds.Ok)
+                return ResultNotFound<Tache?>($"Personne {tache.Personne} non trouvée");
 
             // Vérifie si le code activité de la tâche fait partie de ceux de la personne
-            if (p.Metier!.Activites.Find(a => a.Code == tache.CodeActivite) == null)
+            if (p.Data?.Metier?.Activites.Find(a => a.Code == tache.CodeActivite) == null)
                 throw new ValidationRulesException("CodeActivite", "L'activité ne correspond pas au métier de la personne.");
 
             _context.Taches.Add(tache);
-            await _context.SaveChangesAsync();
-            return tache;
+            return await SaveAndResultOkAsync(tache);
         }
 
-        public async Task<Travail> PostTravail(int idTache, Travail travail)
+        public async Task<ServiceResult<Travail?>> PostTravail(int idTache, Travail travail)
         {
             ValidationRulesException vre = new();
 
@@ -117,84 +115,57 @@ namespace JobOverview.Service
                 throw new ValidationRulesException("IdTache", $"Tache {idTache} non trouvée");
 
             // Récupère la personne associée à la tâche et ses activités
-            Personne? p = await GetPersonne(tache.Personne);
+            var p = await GetPersonne(tache.Personne);
 
             travail.IdTache = idTache;
-            travail.TauxProductivite = p!.TauxProductivite;
+            travail.TauxProductivite = p.Data!.TauxProductivite;
 
             // Met à jour la durée de travail restante sur la tâche
             tache.DureeRestante -= travail.Heures;
             if (tache.DureeRestante < 0) tache.DureeRestante = 0;
 
             _context.Travaux.Add(travail);
-            await _context.SaveChangesAsync();
-            return travail;
+            return await SaveAndResultOkAsync<Travail?>(travail);
         }
         #endregion
 
         #region DELETE
-        public async Task DeleteTravail(int idTache, DateOnly date)
+        public async Task<ServiceResult<int>> DeleteTravail(int idTache, DateOnly date)
         {
-            Tache? tache = await GetTache(idTache);
+            var tache = await GetTache(idTache);
 
-            if (tache == null)
-                throw new ValidationRulesException("IdTache", $"Tache {idTache} non trouvée");
+            if (tache.ResultKind != ResultKinds.Ok)
+                return ResultNotFound<int>($"Tache {idTache} non trouvée");
 
-            Travail? travail = tache.Travaux.Where(t => t.DateTravail == date).FirstOrDefault();
+            Travail? travail = tache.Data?.Travaux.Where(t => t.DateTravail == date).FirstOrDefault();
 
             if (travail == null)
-                throw new ValidationRulesException("Date", "Aucun travail trouvé à la date donnée");
+                return ResultNotFound<int>($"Aucun travail trouvé à la date du {date} sur la tâche {idTache}.");
 
-            tache.DureeRestante += travail.Heures;
+            tache.Data!.DureeRestante += travail.Heures;
 
             // Rattache l'entité au suivi, sans ses filles, en passant son état à Modified
-            EntityEntry<Tache> ent = _context.Entry(tache);
+            EntityEntry<Tache> ent = _context.Entry(tache.Data);
             ent.State = EntityState.Modified;
 
             _context.Remove(travail);
 
-            await _context.SaveChangesAsync();
+            return await SaveAndResultOkAsync(idTache);
         }
 
-        public async Task<int> DeleteTaches(string? personne, string? logiciel, float? version)
+        public async Task<ServiceResult<int>> DeleteTaches(string? personne, string? logiciel, float? version)
         {
-            var req = _context.Taches.Where(t =>
+            var tache = _context.Taches.Where(t =>
                         (personne == null || t.Personne == personne) &&
                         (logiciel == null || t.CodeLogiciel == logiciel) &&
                         (version == null || t.NumVersion == version));
 
-            return await req.ExecuteDeleteAsync();
-
-            //List<Tache> taches = await GetTaches(personne, logiciel, version);
-
-            //if (!taches.Any())
-            //    throw new ValidationRulesException("Personne", "Aucune info trouvée");
-
-            //using (var transaction = _context.Database.BeginTransaction())
-            //{
-            //    int nbSuppr = 0;
-
-            //    foreach (var tache in taches)
-            //    {
-            //        _context.Entry(tache).State = EntityState.Deleted;
-
-            //        //await _context.Taches.Where(x => x.Id == tache.Id).ExecuteDeleteAsync();
-
-            //        // On supprime le travail
-            //        Travail travail = new() { IdTache = tache.Id };
-            //        nbSuppr++;
-            //    }
-
-            //    await _context.SaveChangesAsync();
-
-            //    transaction.Commit();
-
-            //    return nbSuppr;
-            //}
+            _context.Remove(tache);
+            return await SaveAndResultOkAsync();
         }
         #endregion
 
-        public async Task<Tache?> PutPostTache(Tache tache)
+        public async Task<ServiceResult<Tache?>> PutPostTache(Tache tache)
         {
             // Dans le cas d'une modification
             if (tache.Id != 0)
@@ -204,7 +175,7 @@ namespace JobOverview.Service
                           select t.Id;
 
                 if (await req.FirstOrDefaultAsync() == 0)
-                    return null;
+                    return ResultNotFound<Tache?>(tache.Id);
             }
 
             tache.Travaux = null!;
@@ -213,9 +184,8 @@ namespace JobOverview.Service
 
             // Génère une nouvelle valeur de jeton d'accès concurrentiel
             tache.Vers = Guid.NewGuid();
-            await _context.SaveChangesAsync();
 
-            return tache;
+            return await SaveAndResultOkAsync<Tache?>(tache);
         }
     }
 }
